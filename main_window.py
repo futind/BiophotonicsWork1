@@ -89,7 +89,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
     """
     def calculate_radius(self, a: float):
         F = random.uniform(0, 1)
-        return math.sqrt((-2) * (a**2) * math.log(1 - F))
+        return a * math.sqrt((-2) * math.log(F))
     
     """
     Генерируем равномерно распределённую случайную величину phi в полуинтервале [0, 2*pi).
