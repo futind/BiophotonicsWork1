@@ -5,7 +5,6 @@ import numpy as np
 import math
 import random
 import matplotlib.pyplot as plt
-from scipy import special
 
 class MainWindow(QMainWindow, Ui_MainWindow):
     def __init__(self, app):
@@ -32,12 +31,11 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         # Радиус пучка
         a = self.beam_radius_doubleSpinBox.value()
         
-        # Вычисляем количество бинов по правилу Стерджеса
+        # Вычисляем количество бинов по правилу Стёрджеса
         bins_number = 1 + math.floor(math.log2(N))
 
         # счётчик для цикла
         i = 0
-
         # Переменная для нахождения максимального радиуса из тех, которые мы получим
         rmax = 0
         # Тут храним все радиусы, которые получим
@@ -58,62 +56,42 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             #Ставим точку на координатной плоскости
             self.distribution_graph.canvas.ax.scatter(coordinates[0], coordinates[1], marker = ".")
             i += 1
-        print("rmax = ", rmax)
-        r_axis = np.arange(0, rmax, rmax * 0.01)
         
-        # Сортируем список радиусов
-        radiuses.sort()
-        # Формируем края бинов
-        edges = np.arange(0, rmax + 0.01, rmax/bins_number)
         # Рисуем окружности
         for i in range(0, bins_number):
             self.distribution_graph.canvas.ax.add_artist(plt.Circle((0,0), ( (1 + i) / bins_number ) * rmax, fill = False))
 
-        print("edges = ", edges)
+        # Сортируем список радиусов
+        radiuses.sort()
 
-        # Создаем список, в котором будут хранится подсчёты количества радиусов, попавших в i-ое кольцо
+        # Формируем края бинов
+        edges = np.arange(0, rmax + 0.01, rmax/bins_number)
+
+        # Создаем массив, в котором будут храниться подсчёты количества радиусов, попавших в i-ое кольцо
         counts = np.zeros(bins_number)
-        print("counts = ", counts) 
-        # ВЕРНО
+
+        # счётчик для цикла
         i = 1
+        # Распределяем смоделированные радиусы в бины
         for r in radiuses:
             while(r > edges[i]):
                 i += 1
-            counts[i-1] += 1
+            counts[i-1] += 1  
+        
+        # Делим количество точек, лежащих в кольце на площадь кольца и количество фотонов N
+        for i in range(0, len(counts), 1):
+            counts[i] /= N * ((edges[i+1])**2 - (edges[i])**2) * math.pi
+        
+        # Строим гистограмму по данным, которые мы получили
+        self.density_graph.canvas.ax.stairs(counts, edges)
 
-        print("counts = ", counts)    
-                
-    
+        # Создаем массив точек, в которых будем вычислять нормированную плотность вероятности
+        r_axis = np.arange(0, rmax, rmax * 0.01)    
         # Строим график аналитической кривой нормированной плотности вероятности
         density_data = list()
         for r_i in r_axis:
             density_data.append(self.normalized_density(r_i, a))
-        
-
-        for i in range(0, len(counts), 1):
-            counts[i] /= N * ((edges[i+1])**2 - (edges[i])**2) * math.pi
-        print("Divided counts = ", counts)
-        
-
         self.density_graph.canvas.ax.plot(r_axis, density_data)
-
-
-        # Строим гистограмму по данным, которые мы получили
-        print("edges = ", len(edges))
-        print("len(counts) = ", len(counts))
-        print("bins_number = ", bins_number)
-        #self.density_graph.canvas.ax.hist(circles_radiuses[:-1], bins_number, weights = bins)
-        #self.density_graph.canvas.ax.stairs(coutns, edges)
-
-        bins = []
-        for i in range(1, len(edges), 1):
-            bins.append( i * (edges[i] + edges[i - 1])/2 )
-        print("BINS = ", bins)
-        self.density_graph.canvas.ax.stairs(counts, edges)
-        #self.density_graph.canvas.ax.hist(bins, bins_number, weights = counts)
-        #self.density_graph.canvas.ax.bar(bins, counts)
-
-
 
         # Выводим изменения
         self.distribution_graph.canvas.draw()
@@ -139,7 +117,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
     """
     def calculate_radius(self, a: float):
         F = random.uniform(0, 1)
-        #return math.sqrt(2) * a * special.erfinv(F)
         return a * math.sqrt((-2) * math.log(F))
     
     """
@@ -157,8 +134,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
     """
     Метод для вывода аналитической кривой нормированной плотности вероятности
     """
-    # нормализация плотности с якобианом = ( 1 / ( a * math.sqrt(2 * math.pi) ) ) - верно
-    # нормализация плотности
     def normalized_density(self, r: float, a: float):
-        return (math.sqrt(2) / ( math.sqrt(math.pi) * a ) ) *  math.exp(-((r / (math.sqrt(2) * a))**2))
+        return ( 1 / (2 * math.pi * (a**2)) ) *  math.exp(-((r / (math.sqrt(2) * a))**2))
 
