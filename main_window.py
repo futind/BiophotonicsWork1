@@ -2,7 +2,7 @@ from PySide6.QtWidgets import QMainWindow
 from ui_main_window import Ui_MainWindow
 
 import numpy as np
-import math
+from math import log2, log, sin, cos, pi, sqrt, exp, floor
 import random
 import matplotlib.pyplot as plt
 
@@ -32,7 +32,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         a = self.beam_radius_doubleSpinBox.value()
         
         # Вычисляем количество бинов по правилу Стёрджеса
-        bins_number = 1 + math.floor(math.log2(N))
+        bins_number = 1 + floor(log2(N))
 
         # счётчик для цикла
         i = 0
@@ -80,7 +80,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         
         # Делим количество точек, лежащих в кольце на площадь кольца и количество фотонов N
         for i in range(0, len(counts), 1):
-            counts[i] /= N * ((edges[i+1])**2 - (edges[i])**2) * math.pi
+            counts[i] /= N * ((edges[i+1])**2 - (edges[i])**2) * pi
         
         # Строим гистограмму по данным, которые мы получили
         self.density_graph.canvas.ax.stairs(counts, edges)
@@ -117,23 +117,23 @@ class MainWindow(QMainWindow, Ui_MainWindow):
     """
     def calculate_radius(self, a: float):
         F = random.uniform(0, 1)
-        return a * math.sqrt((-2) * math.log(F))
+        return a * sqrt((-2) * log(F))
     
     """
     Генерируем равномерно распределённую случайную величину phi в полуинтервале [0, 2*pi).
     Это и будет наш угол в полярных координатах.
     """
     def angle(self):
-        return random.uniform(0, 2 * math.pi)
+        return random.uniform(0, 2 * pi)
     """
     Переводим координаты нашей точки в полярных координатах в Декартовы координаты.
     """
     def cartesian(self, r: float, phi: float):
-        return [r * math.cos(phi), r * math.sin(phi)]
+        return [r * cos(phi), r * sin(phi)]
     
     """
     Метод для вывода аналитической кривой нормированной плотности вероятности
     """
     def normalized_density(self, r: float, a: float):
-        return ( 1 / (2 * math.pi * (a**2)) ) *  math.exp(-((r / (math.sqrt(2) * a))**2))
+        return ( 1 / (2 * pi * (a**2)) ) *  exp(-((r / (sqrt(2) * a))**2))
 
